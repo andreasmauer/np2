@@ -1,0 +1,16 @@
+/de
+/fr
+/es
+*.csv
+*.txt
+*.xlxs
+
+# compiled #
+######################
+*.pyc
+
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
