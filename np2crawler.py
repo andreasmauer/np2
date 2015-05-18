@@ -33,7 +33,7 @@ class Crawler:
                 for row in csvfiletoread:
 
                     # the first row it is just bullshit from adwords, I have to jump it
-                    if len(row) > 1 and row[0] != 'Search Result Type':
+                    if len(row) > 1 and row[0] != 'Search Result Type' and row[1] != ' --':
 
 
 ####################################################################################
@@ -44,18 +44,25 @@ class Crawler:
 ####################################################################################
 
 
+                        if positives == [''] and how == 'init' and (all(element not in row[1] for element in negatives)):
+                            
+                            self.keywords_crawled.append([row[1], week])
+                            self.magic_crawl(row, week, how, group_name)
 
-                        if how == 'init' and (any(element in row[1] for element in positives)) and (any(element not in row[1] for element in negatives)):
-                            # print str(week) + ' ' + row[1]
+
+                        elif positives == [''] and (how is not 'init') and (all(element not in row[1] for element in negatives)):
+                            
+                            self.magic_crawl(row, week, how, group_name)
+
+
+                        elif how == 'init' and (any(element in row[1] for element in positives)) and (all(element not in row[1] for element in negatives)):
 
                             self.keywords_crawled.append([row[1], week])
 
                             self.magic_crawl(row, week, how, group_name)
 
-        
-
                         
-                        elif how == 'consolidated_init' and (any(element in row[1] for element in positives)) and (any(element not in row[1] for element in negatives)):
+                        elif how == 'consolidated_init' and (any(element in row[1] for element in positives)) and (all(element not in row[1] for element in negatives)):
 
                             self.magic_crawl(row, week, how, group_name)
 
@@ -149,16 +156,4 @@ class Crawler:
             self.kpis[keyword]['rankingbruto'].update({week: float(row[8].replace(",", ".")) * float(row[11].replace(",", "."))})
             self.kpis[keyword]['ranking'].update({week: float(row[11].replace(",", "."))})
             self.kpis[keyword]['ctr'].update({week: ctr})
-
-
-
-
-
-
-
-
-
-
-
-
 
