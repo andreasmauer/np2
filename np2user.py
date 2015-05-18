@@ -1,6 +1,6 @@
 import os
 import np2config
-print "user is load"
+
 
 class Input:
 
@@ -14,7 +14,7 @@ class Input:
             # 'single_keyword': 'kontaktlinsen',
             # 'multiple_keywords': ['kontaktlinsen', 'brillen', 'brille', 'sonnenbrillen'],
             # 'category': 'linsen',
-            # 'country_folder': 'de',
+            # 'country_folder': 'de\\2015',
             # 'weeks': [41],
             # 'path': r'/Users/andres/Documents/python/np/np2.0/de/2014',
             # 'filename_of_report': 'testing.csv',
@@ -26,6 +26,7 @@ class Input:
             'multiple_keywords': [],
             'category': '',
             'country_folder': '',
+            'country': '',
             'weeks': [],
             'path': '',
             'filename_of_report': '',
@@ -132,6 +133,9 @@ class Input:
         # question for everybody:
         self.variables['country_folder'] = raw_input('insert the country folder (de / es / fr or fr\\2013):' )
         self.variables['path'] = np2config.variables['path'] + self.variables['country_folder']
+        self.variables['country'] = self.variables['country_folder'].split('\\')[0]
+        #self.variables['country'] = self.variables['country'][0]
+
 
     
 
@@ -172,6 +176,7 @@ class Input:
         print "the category is:---------"   + str(self.variables['category'])
         print "the regex is:------------"   + str(self.variables['regex'])
         print "the country_folder is: --"   + str(self.variables['country_folder'])
+        print "the country is: ------------"   + str(self.variables['country'])
         print "the weeks are:-----------"   + str(self.variables['weeks']).strip()
         print "the files are in---------"   + self.variables['path']
         print "the filename is:---------"   + self.variables['filename_of_report']
