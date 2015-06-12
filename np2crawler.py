@@ -1,159 +1,76 @@
-import np2config
-import sys
 import csv
-import re
 
-class Crawler:
+class Report:
+
+    def restore(self, path, filename_of_report):
+        self.where = path + '/' + filename_of_report
+
+    def append_new_row(self, row_to_write):
+        
+        with open(self.where, 'a') as f:
+            mycsv = csv.writer(f, delimiter=',', lineterminator='\n')
+            mycsv.writerow(row_to_write)
+
+    def print_general_headers_in_csv(self, reporttype):
+
+        self.append_new_row([reporttype])
+        self.append_new_row('')
+        self.append_new_row('')
+
+    def print_weeks_line(self, weeks):
+
+        weeks_line = list(weeks)
+        weeks_line.insert(0, 'week')
+        self.append_new_row(weeks_line)
 
 
-    def __init__(self):
-        pass
+    def print_kpi_line(self, kpis_per_week, first_column_str):
 
-        self.kpis = {}
-
-        # store all the keywords and weeks that where crawled
-        # self.keywords_crawled = [['kontaktlinsen', 21], ['kontaktlinsen', 22], ['sonnenbrillen', 21]]
-        self.keywords_crawled = []
+        # this is wrong I shouldnt manipulate the object, same as the print_weeks_line
+        
+        kpis_per_week_line = list(kpis_per_week)
+        kpis_per_week_line.insert(0, first_column_str)
 
 
+        # I want to convert every value in the array to a string (for csv format issues), and replace . for , 
+        kpis_in_string = []
+        for value in kpis_per_week_line:
+            kpis_in_string.append(str(value).replace('.', ','))
 
 
-    def crawl(self, path, weeks, positives, negatives, how, group_name):
+        self.append_new_row(kpis_in_string)
 
-        for week in weeks:
+    def print_dictionary(self, reporttype, kpi_names_tuple, weeks, dictionary):
 
-            if np2config.variables['os'] == 'darwin':
-                filepath = path + '/' + 'kw' + str(week) + '.csv'
-            elif np2config.variables['os'] == 'windows':
-                filepath = path + '\\' + 'kw' + str(week) + '.csv'
+        # check which kpis do I have to print
+        self.print_general_headers_in_csv(reporttype)
+        
+
+        # for each kpi we create a block 
+        i = 0
+        for kpi_name in kpi_names_tuple:
             
-            with open(filepath, 'rb') as csvfile:
-                
-                csvfiletoread = csv.reader(csvfile, delimiter = ',')
-                for row in csvfiletoread:
+            self.append_new_row([kpi_names_tuple[i]])
+            self.print_weeks_line(weeks)
 
-                    # the first row it is just bullshit from adwords, I have to jump it
-                    if len(row) > 1 and row[0] != 'Search Result Type' and row[1] != ' --':
+            # I print the kpis
+            for keyword in dictionary:
+                weekly_line_to_print = []
 
+                # for each week I take the value needed and pass it to the print_kpi_line function
+                # there are cases where I dont have values for that week, therefore I print 0
+                for week in weeks:
+                    try:
+                        weekly_line_to_print.append(dictionary[keyword][kpi_name][week])
+                    except:
+                        weekly_line_to_print.append(0.0)
 
-####################################################################################
-
-                        # KEYWORD MAGIC
-                            # 4 dif reports, init, consolidated_init, just, consolidated_just
-
-####################################################################################
-
-
-                        if positives == [''] and how == 'init' and (all(element not in row[1] for element in negatives)):
-                            
-                            self.keywords_crawled.append([row[1], week])
-                            self.magic_crawl(row, week, how, group_name)
+                self.print_kpi_line(weekly_line_to_print, keyword)
 
 
-                        elif positives == [''] and (how is not 'init') and (all(element not in row[1] for element in negatives)):
-                            
-                            self.magic_crawl(row, week, how, group_name)
+            i = i + 1
 
+            # print an empty line to separate:
+            self.append_new_row('')
 
-                        elif how == 'init' and (any(element in row[1] for element in positives)) and (all(element not in row[1] for element in negatives)):
-
-                            self.keywords_crawled.append([row[1], week])
-
-                            self.magic_crawl(row, week, how, group_name)
-
-                        
-                        elif how == 'consolidated_init' and (any(element in row[1] for element in positives)) and (all(element not in row[1] for element in negatives)):
-
-                            self.magic_crawl(row, week, how, group_name)
-
-
-
-                        elif how == 'just' and (any(element == row[1] for element in positives)):    
-                            
-
-                            self.magic_crawl(row, week, how, group_name)
-
-
-
-                        elif how == 'consolidated_just' and (any(element == row[1] for element in positives)):
-
-                            self.magic_crawl(row, week, how, group_name)
-
-
-
-                        elif how == 'regex' and (re.search(positives, row[1])):
-
-                            self.magic_crawl(row, week, how, group_name)
-
-
-            print 'crawling for week ' + week + ' done'
-
-
-        # print self.kpis
-
-
-
-
-
-    def magic_crawl(self, row, week, how, group_name):
-
-
-        # define keyword vs group_name
-        if (how == 'init') or (how == 'just') or (how == 'regex'):
-
-            keyword = row[1]
-
-        elif (how == 'consolidated_init') or (how == 'consolidated_just'):
-
-            keyword = group_name
-
-
-        # check if keyword exists & update if not
-        if keyword not in self.kpis:
-
-        # the ctr is always tricky to set becaused x / 0
-            try:     
-                ctr = round(float(row[7].replace(",", ".")) / float(row[8].replace(",", ".")), 2)
-
-            except:
-                ctr = 0.0
-
-        # update the self.kpis
-            self.kpis.update({keyword: {
-                'clicks': {week: float(row[7].replace(",", "."))},
-                'impressions': {week: float(row[8].replace(",", "."))},
-                'rankingbruto': {week: (float(row[8].replace(",", ".")) * float(row[11].replace(",", ".")))},
-                'ranking': {week: float(row[11].replace(",", "."))},
-                'ctr': {week: ctr}}})
-
-        # check if week exists & pass values
-        elif week in self.kpis[keyword]['clicks']:
-
-            self.kpis[keyword]['clicks'][week] = self.kpis[keyword]['clicks'][week] + float(row[7].replace(",", "."))
-            self.kpis[keyword]['impressions'][week] = self.kpis[keyword]['impressions'][week] + float(row[8].replace(",", "."))
-            self.kpis[keyword]['rankingbruto'][week] = self.kpis[keyword]['rankingbruto'][week] + (float(row[8].replace(",", ".")) * float(row[11].replace(",", ".")))
-            
-            try:
-                self.kpis[keyword]['ranking'][week] = float(self.kpis[keyword]['rankingbruto'][week] / self.kpis[keyword]['impressions'][week])
-            except:
-                self.kpis[keyword]['ranking'][week] = 0.0
-            try:
-                self.kpis[keyword]['ctr'][week] = float(self.kpis[keyword]['clicks'][week] / self.kpis[keyword]['impressions'][week])
-            except:
-                self.kpis[keyword]['ctr'][week] = 0.0
-
-
-        # if not then I update
-        else:
-
-            try: 
-                ctr = float(row[7].replace(",", ".")) / float(row[8].replace(",", "."))
-            except:
-                ctr = 0.0
-
-            self.kpis[keyword]['clicks'].update({week: float(row[7].replace(",", "."))})
-            self.kpis[keyword]['impressions'].update({week: float(row[8].replace(",", "."))})
-            self.kpis[keyword]['rankingbruto'].update({week: float(row[8].replace(",", ".")) * float(row[11].replace(",", "."))})
-            self.kpis[keyword]['ranking'].update({week: float(row[11].replace(",", "."))})
-            self.kpis[keyword]['ctr'].update({week: ctr})
-
+        print 'the report is done on the path' + self.where
