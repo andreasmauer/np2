@@ -30,17 +30,26 @@ class Controller:
         elif self.User.get('reporttype') == 'multiple keywords':
             self.multiple_keywords_report()
 
-        elif self.User.get('reporttype') == 'full category':
-            self.full_category_report()
-
         elif self.User.get('reporttype') == 'categories':
             self.categories_report()
 
-        elif self.User.get('reporttype') == 'regex':
-            self.regex_report()
+        elif self.User.get('reporttype') == 'brille':
+            self.brille_report()
 
-
-
+        elif self.User.get('reporttype') == 'sonne':
+            self.sonne_report()
+            
+        elif self.User.get('reporttype') == 'linse':
+            self.linse_report()
+            
+        elif self.User.get('reporttype') == 'brands':
+            self.brands_report()
+            
+        elif self.User.get('reporttype') == 'brand':
+            self.brand_report()
+            
+        elif self.User.get('reporttype') == 'others':
+            self.others_report()
 
     def single_keyword_report(self):
 
@@ -72,48 +81,20 @@ class Controller:
 
         self.brand = ['spex', 'mister']
 
-
-        glassesPositives = {
-            'de': ['brille'],
-            'ch': ['brille'],
-            'es': ['gafa'],
-            'fr': ['lunette'],
-            'uk': ['glasses'],
-            'nl': ['brile'],
-        }
-
-        sunglassesPositives = {
-            'de': ['sonne'],
-            'ch': ['sonne'],
-            'es': ['sol'],
-            'fr': ['sol'],
-            'uk': ['sun'],
-            'nl': ['zonnen'],
-        }
-
-        lensesPositives = {
-            'de': ['linse', 'kontakt'],
-            'ch': ['linse', 'kontakt'],
-            'es': ['lentilla', 'lentes', 'contacto'],
-            'fr': ['lentille', 'contact'],
-            'uk': ['contact', 'lense'],
-            'nl': ['kontakt'],
-        }
-
-        self.glassesPositives = glassesPositives[self.User.get('country')]
+        self.glassesPositives = np2config.variables['glassesPositives'][self.User.get('country')]
         self.glassesNegatives = self.brand[:]
-        self.glassesNegatives.extend(sunglassesPositives[self.User.get('country')])
-        self.sunglassesPositives = sunglassesPositives[self.User.get('country')]
+        self.glassesNegatives.extend(np2config.variables['sunglassesPositives'][self.User.get('country')])
+        self.sunglassesPositives = np2config.variables['sunglassesPositives'][self.User.get('country')]
         self.sunglassesNegatives = self.brand[:]
-        self.lensesPositives = lensesPositives[self.User.get('country')]
+        self.lensesPositives = np2config.variables['lensesPositives'][self.User.get('country')]
         self.lensesNegatives = self.brand[:]
-        self.lensesNegatives.extend(sunglassesPositives[self.User.get('country')])
-        self.lensesNegatives.extend(glassesPositives[self.User.get('country')])
+        self.lensesNegatives.extend(np2config.variables['sunglassesPositives'][self.User.get('country')])
+        self.lensesNegatives.extend(np2config.variables['glassesPositives'][self.User.get('country')])
         self.brandsPositives = self.Brands
         self.brandsNegatives = self.brand[:]
-        self.brandsNegatives.extend(sunglassesPositives[self.User.get('country')])
-        self.brandsNegatives.extend(glassesPositives[self.User.get('country')])
-        self.brandsNegatives.extend(lensesPositives[self.User.get('country')])
+        self.brandsNegatives.extend(np2config.variables['sunglassesPositives'][self.User.get('country')])
+        self.brandsNegatives.extend(np2config.variables['glassesPositives'][self.User.get('country')])
+        self.brandsNegatives.extend(np2config.variables['lensesPositives'][self.User.get('country')])
         self.othersPositives = ['']
         self.othersNegatives = self.brandsNegatives[:]
         self.othersNegatives.extend(self.brandsPositives)
@@ -145,18 +126,106 @@ class Controller:
         self.Report.print_dictionary(self.User.get('reporttype'), np2config.variables['kpis'],
             self.User.get('weeks'), self.Crawler.kpis)
 
-    def full_category_report(self):
 
+    def brand_report(self):
+        self.brand = ['spex', 'mister']   
 
         # crawl the csvs
         self.Crawler.crawl(self.User.get('path'), self.User.get('weeks'),
-            [self.User.get('category')], ['negative values here'], 'init', 'no-groupname')
+            self.brand, ['negative values here'], 'init', 'brand')
 
         # print in report
         self.Report.restore(self.User.get('path'), self.User.get('filename_of_report'))
 
         self.Report.print_dictionary(self.User.get('reporttype'), np2config.variables['kpis'],
             self.User.get('weeks'), self.Crawler.kpis)
+
+
+    def brille_report(self):
+        self.brand = ['spex', 'mister']   
+        self.glassesPositives = np2config.variables['glassesPositives'][self.User.get('country')]
+        self.glassesNegatives = self.brand[:]
+        self.glassesNegatives.extend(np2config.variables['sunglassesPositives'][self.User.get('country')])
+
+        # crawl the csvs
+        self.Crawler.crawl(self.User.get('path'), self.User.get('weeks'),
+            self.glassesPositives, self.glassesNegatives, 'init', 'brille')
+
+        # print in report
+        self.Report.restore(self.User.get('path'), self.User.get('filename_of_report'))
+
+        self.Report.print_dictionary(self.User.get('reporttype'), np2config.variables['kpis'],
+            self.User.get('weeks'), self.Crawler.kpis)
+
+
+    def sonne_report(self):
+        self.brand = ['spex', 'mister']   
+        self.sunglassesPositives = np2config.variables['sunglassesPositives'][self.User.get('country')]
+        self.sunglassesNegatives = self.brand[:]
+
+        # crawl the csvs
+        self.Crawler.crawl(self.User.get('path'), self.User.get('weeks'),
+            self.sunglassesPositives, self.sunglassesNegatives, 'init', 'sonne')
+
+        # print in report
+        self.Report.restore(self.User.get('path'), self.User.get('filename_of_report'))
+
+        self.Report.print_dictionary(self.User.get('reporttype'), np2config.variables['kpis'],
+            self.User.get('weeks'), self.Crawler.kpis)
+
+
+    def linse_report(self):
+        self.brand = ['spex', 'mister']   
+        self.lensesPositives = np2config.variables['lensesPositives'][self.User.get('country')]
+        self.lensesNegatives = self.brand[:]
+        self.lensesNegatives.extend(np2config.variables['sunglassesPositives'][self.User.get('country')])
+        self.lensesNegatives.extend(np2config.variables['glassesPositives'][self.User.get('country')])
+
+        # crawl the csvs
+        self.Crawler.crawl(self.User.get('path'), self.User.get('weeks'),
+            self.lensesPositives, self.lensesNegatives, 'init', 'linse')
+
+        # print in report
+        self.Report.restore(self.User.get('path'), self.User.get('filename_of_report'))
+
+        self.Report.print_dictionary(self.User.get('reporttype'), np2config.variables['kpis'],
+            self.User.get('weeks'), self.Crawler.kpis)
+
+    def brands_report(self):
+        self.brand = ['spex', 'mister']   
+        self.brandsPositives = self.Brands
+        self.brandsNegatives = self.brand[:]
+        self.brandsNegatives.extend(np2config.variables['sunglassesPositives'][self.User.get('country')])
+        self.brandsNegatives.extend(np2config.variables['glassesPositives'][self.User.get('country')])
+        self.brandsNegatives.extend(np2config.variables['lensesPositives'][self.User.get('country')])
+
+        # crawl the csvs
+        self.Crawler.crawl(self.User.get('path'), self.User.get('weeks'),
+            self.brandsPositives, self.brandsNegatives, 'init', 'brands')
+
+        # print in report
+        self.Report.restore(self.User.get('path'), self.User.get('filename_of_report'))
+
+        self.Report.print_dictionary(self.User.get('reporttype'), np2config.variables['kpis'],
+            self.User.get('weeks'), self.Crawler.kpis)
+
+
+    def others_report(self):
+        self.brand = ['spex', 'mister']   
+        self.othersPositives = ['']
+        self.othersNegatives = self.brandsNegatives[:]
+        self.othersNegatives.extend(self.brandsPositives)
+
+        # crawl the csvs
+        self.Crawler.crawl(self.User.get('path'), self.User.get('weeks'),
+            self.othersPositives, self.othersNegatives, 'init', 'others')
+
+        # print in report
+        self.Report.restore(self.User.get('path'), self.User.get('filename_of_report'))
+
+        self.Report.print_dictionary(self.User.get('reporttype'), np2config.variables['kpis'],
+            self.User.get('weeks'), self.Crawler.kpis)
+
 
     def keyword_in_report(self):
 
@@ -180,3 +249,4 @@ class Controller:
 
 
 a = Controller()
+
